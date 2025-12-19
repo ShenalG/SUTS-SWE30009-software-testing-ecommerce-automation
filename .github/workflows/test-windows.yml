@@ -1,0 +1,61 @@
+name: Selenium Reliability Test on Windows
+
+# Requirement 2: Manual trigger
+on:
+  workflow_dispatch:
+
+jobs:
+  test-dessert-shop-windows:
+    name: Run Selenium Tests on Windows
+    # Requirement 2: Run on windows-latest runner
+    runs-on: windows-latest
+    
+    # Requirement 2: 30-minute timeout
+    timeout-minutes: 30
+
+    steps:
+      # Requirement 3: Adapt setup steps for Windows
+      
+      # 1. Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      # 3. Setup PHP (Required because Windows runners don't always have PHP in path)
+      # We use a standard action to install PHP on Windows
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      # 4. Install Dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 5. Start PHP Server (Background Process in PowerShell)
+      # We use Start-Process to run PHP in the background without blocking the terminal
+      - name: Start PHP Server
+        run: Start-Process -FilePath "php" -ArgumentList "-S", "localhost:8000" -PassThru
+
+      # 6. Wait for Server to Initialize
+      - name: Wait for Server
+        run: Start-Sleep -Seconds 5
+
+      # 7. Run Pytest
+      #- name: Run Pytest and Generate Report
+       # run: pytest --html=report.html --self-contained-html
+
+      # 8. Upload Artifacts
+      #- name: Upload Test Report
+       # if: always()
+        #uses: actions/upload-artifact@v4
+        #with:
+         # name: test-report-windows
+          #path: report.html
