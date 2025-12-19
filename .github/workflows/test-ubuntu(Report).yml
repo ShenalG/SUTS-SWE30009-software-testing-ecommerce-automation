@@ -1,0 +1,54 @@
+name: Selenium Reliability Test on Ubuntu - Report
+
+# Requirement 2: Workflow must be manually triggered
+on:
+  workflow_dispatch:
+
+jobs:
+  test-dessert-shop:
+    name: Run Selenium Tests on Ubuntu - Report
+    # Requirement 3: Run on ubuntu-latest runner
+    runs-on: ubuntu-latest
+    
+    # Requirement 2: 30-minute timeout
+    timeout-minutes: 30
+
+    steps:
+      # Requirement 6a: Check out the repository code
+      # UPDATED to v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      # Requirement 6b: Set up Python environment
+      # UPDATED to v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      # Requirement 6c: Install dependencies from requirements.txt
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Requirement 6e: Launch the Web Server (PHP built-in server)
+      - name: Start PHP Server
+        run: php -S localhost:8000 &
+        
+      # Wait a moment for the server to start
+      - name: Wait for server to start
+        run: sleep 5
+        
+      # Requirement 6f: Execute Python Test Script
+      - name: Run Pytest and Generate Report
+        run: pytest --html=report.html --self-contained-html
+
+      # Requirement 5: Upload the report as an artifact
+      # ⭐ THIS WAS THE ERROR. UPDATED FROM v3 TO v4 ⭐
+      - name: Upload Test Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report.html
